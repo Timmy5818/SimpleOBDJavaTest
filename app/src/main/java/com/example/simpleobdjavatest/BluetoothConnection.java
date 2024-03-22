@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
@@ -23,6 +24,8 @@ public class BluetoothConnection implements AdapterConnection {
     private BluetoothSocket socket;
     private InputStream input;
     private OutputStream output;
+
+    private Context context;
 
     public BluetoothConnection(String deviceName) {
         this.deviceName = deviceName;
@@ -91,6 +94,13 @@ public class BluetoothConnection implements AdapterConnection {
 //        }
 //    }
 
+    // 修改構造函數以包括Context
+    public BluetoothConnection(Context context, String deviceName) {
+        this.context = context;
+        this.deviceName = deviceName;
+        Log.i(LOGGER_TAG, "Created instance of BluetoothConnection with device: " + deviceName);
+    }
+
     @SuppressLint("MissingPermission")
     @Override
     public void connect() throws IOException {
@@ -122,6 +132,7 @@ public class BluetoothConnection implements AdapterConnection {
                 // 發送連線成功的廣播
                 Intent intent = new Intent(OBDBluetoothService.ACTION_OBD_STATE);
                 intent.putExtra(OBDBluetoothService.EXTRA_OBD_STATE, 1);
+                context.sendBroadcast(intent);
             } else {
                 throw new IOException("Failed to connect to the device: " + device.getName());
             }

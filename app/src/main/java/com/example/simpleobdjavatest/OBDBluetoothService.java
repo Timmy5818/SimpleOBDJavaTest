@@ -48,12 +48,15 @@ public class OBDBluetoothService extends Service {
                 int state = intent.getIntExtra(EXTRA_OBD_STATE, 0);
                 // Connected
                 if (state == 1) {
+                    Log.i("OBDBluetoothService","BroadcastReceiver OBD State is Connected");
                     // Run test()
                     try {
                         test();
                     } catch (IOException | InterruptedException | ExecutionException e) {
                         throw new RuntimeException(e);
                     }
+                } else {
+                    Log.i("OBDBluetoothService","BroadcastReceiver OBD State is not Connect");
                 }
             }
         }
@@ -93,7 +96,12 @@ public class OBDBluetoothService extends Service {
     public void onCreate() {
         super.onCreate();
         bluetoothConnection = new BluetoothConnection("OBD");
-        registerReceiver(connectionReceiver, new IntentFilter(ACTION_OBD_STATE));
+
+        // initialization BroadcastReceiver
+        IntentFilter filter = new IntentFilter(OBDBluetoothService.ACTION_OBD_STATE);
+        registerReceiver(connectionReceiver, filter);
+
+        bluetoothConnection = new BluetoothConnection(this, "OBD");
 
 //        try {
 //            test();
@@ -105,7 +113,7 @@ public class OBDBluetoothService extends Service {
             try {
                 Log.i("OBDBluetoothService","Try OBD-II Connection");
                 bluetoothConnection = new BluetoothConnection("OBDII");
-                bluetoothConnection.connectWithRetry(10); // Try 3 times
+                bluetoothConnection.connectWithRetry(10); // Try 10 times
 
                 Intent intent = new Intent(OBDBluetoothService.ACTION_OBD_STATE);
                 intent.putExtra(OBDBluetoothService.EXTRA_OBD_STATE, 1);
@@ -117,11 +125,11 @@ public class OBDBluetoothService extends Service {
         }).start();
     }
 
-//    @Override
-//    public void onDestroy() {
-//        super.onDestroy();
-//        unregisterReceiver(connectionReceiver);
-//    }
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(connectionReceiver);
+    }
 
     public void sendBroadcast(Intent intent) {
         sendBroadcast(intent);

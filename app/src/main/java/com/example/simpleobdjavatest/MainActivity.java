@@ -21,6 +21,7 @@ import com.example.simpleobdjavatest.databinding.ActivityMainBinding;
 public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
+    public Context mContext;
 
     private static final int PERMISSION_REQUEST_FINE_LOCATION = 2;
     private static final int MY_PERMISSIONS_REQUEST_BLUETOOTH_CONNECT = 1;
@@ -62,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
         IntentFilter filter = new IntentFilter(OBDBluetoothService.ACTION_OBD_STATE);
         registerReceiver(connectionStateReceiver, filter);
 
+
         if (checkSelfPermission(android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_REQUEST_FINE_LOCATION);
         }
@@ -83,6 +85,12 @@ public class MainActivity extends AppCompatActivity {
         Log.i("MainActivity","Start OBD-II BluetoothService");
         Intent bsdIntent = new Intent(this, OBDBluetoothService.class);
         startService(bsdIntent);
+    }
+
+    private static Context sContext;
+
+    public static void initializeContext(Context context) {
+        sContext = context.getApplicationContext();
     }
 
     @Override
