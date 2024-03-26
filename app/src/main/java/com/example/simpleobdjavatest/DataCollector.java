@@ -1,6 +1,5 @@
 package com.example.simpleobdjavatest;
 
-import android.content.Intent;
 import android.util.Log;
 
 import org.apache.commons.collections4.MultiValuedMap;
@@ -11,11 +10,10 @@ import org.obd.metrics.api.model.ReplyObserver;
 import org.obd.metrics.command.Command;
 import org.obd.metrics.pid.PidDefinition;
 
+import java.util.Arrays;
 import java.util.List;
 
 public final class DataCollector extends ReplyObserver<Reply<?>> {
-
-    private final OBDBluetoothService service;
 
     private final MultiValuedMap<Command, Reply<?>> data = new ArrayListValuedHashMap<Command, Reply<?>>();
 
@@ -33,25 +31,42 @@ public final class DataCollector extends ReplyObserver<Reply<?>> {
         return (List<ObdMetric>) metrics.get(pidDefinition);
     }
 
-    public DataCollector(OBDBluetoothService service) {
-        this.service = service;
-    }
 
     @Override
     public void onNext(Reply<?> reply) {
-        Log.i("Receive data: {}", reply.toString());
+        Log.e("Receive data: {}", Arrays.toString(reply.getCommand().getData()));
+
+        ObdMetric obdMetric = (ObdMetric) reply;
+        Log.e("DataCollector", String.valueOf(obdMetric));
+        // Display data
+        // (defined from this file https://github.com/tzebrowski/ObdMetrics/blob/main/src/main/resources/mode01.json )
+        // Calculated Engine Load
+        if (obdMetric.getCommand().getPid().getId() == 5) {
+            Log.e("DataCollector", "Calculated Engine Load: " + obdMetric.getValue());
+
+            // Coolant
+        } else if (obdMetric.getCommand().getPid().getId() == 6) {
+            Log.e("DataCollector", "coolant: " + obdMetric.getValue());
+
+            // Engine Speed
+        } else if (obdMetric.getCommand().getPid().getId() == 13) {
+            double rpm = obdMetric.getValue().doubleValue();
+            Log.e("DataCollector", "Vehicle RPM: " + rpm);
+
+            // Speed
+        } else if (obdMetric.getCommand().getPid().getId() == 14) {
+            Log.e("DataCollector", "Vehicle Speed: " + obdMetric.getValue());
+
+            // Control Module Voltage
+        } else if (obdMetric.getCommand().getPid().getId() == 67) {
+            Log.e("DataCollector", "Control Module Voltage: " + obdMetric.getValue());
+        }
+
         data.put(reply.getCommand(), reply);
 
-        if (reply instanceof ObdMetric) {
-            metrics.put(((ObdMetric) reply).getCommand().getPid(), (ObdMetric) reply);
+//        if (reply instanceof ObdMetric) {
+//            metrics.put(((ObdMetric) reply).getCommand().getPid(), (ObdMetric) reply);
+//        }
 
-            ObdMetric metric = (ObdMetric) reply;
-            // Car Speed PID
-            if (metric.getCommand().getPid().getId() == 7116) {
-                Intent intent = new Intent(OBDBluetoothService.ACTION_OBD_STATE);
-                intent.putExtra(OBDBluetoothService.EXTRA_OBD_SPEED, metric.getValue().intValue());
-                service.sendBroadcast(intent);
-            }
-        }
     }
 }
