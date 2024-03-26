@@ -37,7 +37,7 @@ public class OBDBluetoothService extends Service {
     public static final String EXTRA_OBD_SPEED = "obd_speed";
 
     private BluetoothAdapter bluetoothAdapter;
-    private String obdMacAddress = "";
+    private String obdMacAddress = null;
 
     @SuppressLint("MissingPermission")
     @Override
@@ -89,10 +89,12 @@ public class OBDBluetoothService extends Service {
                         Log.e("OBDBluetoothService","Mac address:" + obdMacAddress);
 
                         // Find Mac Address to Connect
-                        try {
-                            test();
-                        } catch (IOException | ExecutionException | InterruptedException e) {
-                            throw new RuntimeException(e);
+                        if (obdMacAddress != null) {
+                            try {
+                                test();
+                            } catch (IOException | ExecutionException | InterruptedException e) {
+                                throw new RuntimeException(e);
+                            }
                         }
 
 //                        BluetoothDevice deviceToConnect = bluetoothAdapter.getRemoteDevice(obdMacAddress);
