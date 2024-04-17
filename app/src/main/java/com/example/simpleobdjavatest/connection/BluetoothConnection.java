@@ -1,10 +1,15 @@
-package com.example.simpleobdjavatest;
+package com.example.simpleobdjavatest.connection;
 
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
+import android.content.Context;
+import android.content.Intent;
 import android.os.ParcelUuid;
 import android.util.Log;
+
+import com.example.simpleobdjavatest.OBDBluetoothService;
 
 import org.obd.metrics.transport.AdapterConnection;
 
@@ -21,6 +26,9 @@ public class BluetoothConnection implements AdapterConnection {
     private BluetoothSocket socket;
     private InputStream input;
     private OutputStream output;
+
+    @SuppressLint("StaticFieldLeak")
+    static Context mContext;
 
     public BluetoothConnection(String deviceAddress) {
         this.deviceAddress = deviceAddress;
@@ -70,6 +78,16 @@ public class BluetoothConnection implements AdapterConnection {
                     input = socket.getInputStream();
                     output = socket.getOutputStream();
                     Log.e(LOGGER_TAG, "Successfully connected to the adapter: " + deviceAddress);
+
+                    // Call OBDActivity Device is connected
+                    if (mContext != null) {
+                        Intent intent = new Intent(OBDBluetoothService.ACTION_OBD_STATE);
+                        intent.putExtra(OBDBluetoothService.EXTRA_OBD_STATE, 1);
+                        mContext.sendBroadcast(intent);
+                    } else {
+                        Log.e("PcBluetoothConnection","mContext is Null");
+                    }
+
                 } else {
                     throw new IOException("Failed to connect to the adapter: " + deviceAddress);
                 }

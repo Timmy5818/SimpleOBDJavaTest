@@ -13,14 +13,14 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
+import com.example.simpleobdjavatest.connection.BluetoothConnection;
+
 import org.obd.metrics.api.Workflow;
 import org.obd.metrics.api.model.AdaptiveTimeoutPolicy;
 import org.obd.metrics.api.model.Adjustments;
 import org.obd.metrics.api.model.BatchPolicy;
 import org.obd.metrics.api.model.CachePolicy;
 import org.obd.metrics.api.model.Init;
-import org.obd.metrics.api.model.Init.Header;
-import org.obd.metrics.api.model.Init.Protocol;
 import org.obd.metrics.api.model.Pids;
 import org.obd.metrics.api.model.ProducerPolicy;
 import org.obd.metrics.api.model.Query;
@@ -109,7 +109,9 @@ public class OBDBluetoothService extends Service {
         registerReceiver(receiver, filter);
     }
 
+    @SuppressWarnings("all")
     public void test() throws IOException, InterruptedException, ExecutionException {
+        // Automatically connect OBD devices
         var connection = new BluetoothConnection(obdMacAddress);
 
         // var connection = new BluetoothConnection("CE:5E:89:74:3D:4C");
@@ -134,18 +136,28 @@ public class OBDBluetoothService extends Service {
         // Calculated Engine Load
         var calculatedEngineLoad = 5L;
         // Coolant
-        var coolant= 6L;
+        var coolant_tmp= 6L;
         // Engine Speed
         var engineSpeedPID = 13L;
         // Speed
         var speed = 14L;
         // Control Module Voltage
         var controlModuleVoltage = 67L;
-        var query = Query.builder().pid(engineSpeedPID).pid(coolant).pid(calculatedEngineLoad).
+        var query = Query.builder().pid(engineSpeedPID).pid(coolant_tmp).pid(calculatedEngineLoad).
                 pid(speed).pid(controlModuleVoltage).build();
+
+//        var query = Query.builder()
+//                .pid(6l) // Engine coolant temperature
+//                .pid(12l) // Intake manifold absolute pressure
+//                .pid(13l) // Engine RPM
+//                .pid(16l) // Intake air temperature
+//                .pid(18l) // Throttle position
+//                .pid(14l) // Vehicle speed
+//                .build();
 
         var optional = Adjustments
                 .builder()
+                .debugEnabled(true)
                 .vehicleCapabilitiesReadingEnabled(Boolean.TRUE)
                 .vehicleMetadataReadingEnabled(Boolean.TRUE)
                 .adaptiveTimeoutPolicy(AdaptiveTimeoutPolicy.builder().enabled(Boolean.TRUE).checkInterval(5000).commandFrequency(commandFrequency).build())
@@ -157,13 +169,16 @@ public class OBDBluetoothService extends Service {
 
         var init = Init.builder()
                 .delayAfterInit(1000)
-                .header(Header.builder().mode("22").header("DA10F1").build())
-                .header(Header.builder().mode("01").header("DB33F1").build())
-                .protocol(Protocol.CAN_29)
+//                .header(Header.builder().mode("22").header("DA10F1").build())
+//                .header(Header.builder().mode("01").header("DB33F1").build())
+//                .protocol(Protocol.AUTO)
                 .sequence(DefaultCommandGroup.INIT).build();
 
         workflow.start(connection, query, init, optional);
+
+        var coolant = workflow.getPidRegistry().findBy(6l);
     }
+
 
     @Nullable
     @Override
