@@ -58,7 +58,6 @@ public class OBDBluetoothService extends Service {
             }
         }
 
-
         return flags;
     }
 
